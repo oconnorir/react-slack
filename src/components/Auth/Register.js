@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
+import firebase from '../../firebase';
 
 import {
   Grid,
@@ -12,16 +13,39 @@ import {
 }           from 'semantic-ui-react';
 
 class Register extends Component {
-  state = {}
+  state = {
+    username: '',
+    email: '',
+    password: '',
+    passwordConfirmation: ''
+  }
 
   changeHandler = (evt) => {
+    this.setState({
+      [evt.target.name]: evt.target.value
+    })
+  }
 
+  submitHandler = (evt) => {
+    evt.preventDefault();
+    firebase
+      .auth()
+      .createUserWithEmailAndPassword(this.state.email, this.state.password)
+      .then(createdUser => {
+        console.warn(createdUser);
+      })
+      .catch(err => {
+        console.error(`Error : ${err}`)
+      })
   }
 
 
 
 
   render () {
+
+    const {username, email, password, passwordConfirmation} = this.state
+
     return (
       <Grid textAlign='center' verticalAlign='middle' className='app'>
         <Grid.Column style={{maxWidth: 450}}>
@@ -29,7 +53,7 @@ class Register extends Component {
             <Icon name='puzzle piece' color='orange' />
             Register for DevChat
           </Header>
-          <Form size='large'>
+          <Form onSubmit={this.submitHandler} size='large'>
             <Segment stacked>
 
               <Form.Input
@@ -39,6 +63,7 @@ class Register extends Component {
                 iconPosition='left'
                 placeholder='Username'
                 type='text'
+                value={username}
                 onChange={this.changeHandler} />
 
               <Form.Input
@@ -48,6 +73,7 @@ class Register extends Component {
                 iconPosition='left'
                 placeholder='Email'
                 type='email'
+                value={email}
                 onChange={this.changeHandler} />
 
               <Form.Input
@@ -57,6 +83,7 @@ class Register extends Component {
                 iconPosition='left'
                 placeholder='Password'
                 type='password'
+                value={password}
                 onChange={this.changeHandler} />
 
               <Form.Input
@@ -66,6 +93,7 @@ class Register extends Component {
                 iconPosition='left'
                 placeholder='Password Confirmation'
                 type='password'
+                value={passwordConfirmation}
                 onChange={this.changeHandler} />
 
               <Button color='orange' fluid size='large'>Submit</Button>
