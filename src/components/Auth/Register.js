@@ -17,7 +17,8 @@ class Register extends Component {
     username: '',
     email: '',
     password: '',
-    passwordConfirmation: ''
+    passwordConfirmation: '',
+    errors: []
   }
 
   changeHandler = (evt) => {
@@ -27,24 +28,66 @@ class Register extends Component {
   }
 
   submitHandler = (evt) => {
-    evt.preventDefault();
-    firebase
-      .auth()
-      .createUserWithEmailAndPassword(this.state.email, this.state.password)
-      .then(createdUser => {
-        console.warn(createdUser);
+    if (this.isFormValid()) {
+
+      evt.preventDefault();
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.state.email, this.state.password)
+        .then(createdUser => {
+          console.warn(createdUser);
+        })
+        .catch(err => {
+          console.error(`Error : ${err}`)
+        })
+    }
+  }
+
+  isFormValid = () => {
+    let errors = [];
+    let error;
+
+    if (this.isFormEmpty(this.state)) {
+      error = {message: 'Please fill in all sections of this form.'};
+      this.setState({
+        errors: errors.concat(error)
       })
-      .catch(err => {
-        console.error(`Error : ${err}`)
+      return false;
+    } else if (!this.isPasswordValid(this.state)) {
+      error = {message: 'Your password is invalid.'}
+      this.setState({
+        errors: errors.concat(error)
       })
+      return false;
+    } else {
+      this.setState({
+        errors: []
+      })
+      return true;
+    }
+  }
+
+  isFormEmpty = ({username, email, password, passwordConfirmation}) => {
+    return !username.length || !email.length || !password.length || !passwordConfirmation.length;
+  }
+
+  isPasswordValid = ({password, passwordConfirmation}) => {
+    if (password.length < 6 || passwordConfirmation.length < 6) {
+      return false;
+    } else if (password !== passwordConfirmation) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
 
+  displayErrors = errors => errors.map((error, idx) => <p key={(idx * Math.random())}>{error.message}</p>)
 
 
   render () {
 
-    const {username, email, password, passwordConfirmation} = this.state
+    const {username, email, password, passwordConfirmation, errors} = this.state
 
     return (
       <Grid textAlign='center' verticalAlign='middle' className='app'>
@@ -55,7 +98,6 @@ class Register extends Component {
           </Header>
           <Form onSubmit={this.submitHandler} size='large'>
             <Segment stacked>
-
               <Form.Input
                 fluid
                 name='username'
@@ -100,7 +142,12 @@ class Register extends Component {
 
             </Segment>
           </Form>
-
+          {errors.length > 0 && (
+            <Message error>
+              <h3>Error</h3>
+              {this.displayErrors(errors)}
+            </Message>
+          )}
           <Message>Already a user? <Link to='/login'>Login</Link></Message>
 
         </Grid.Column>
