@@ -14,11 +14,12 @@ import {
 
 class Register extends Component {
   state = {
-    username: '',
     email: '',
+    errors: [],
+    loading: false,
     password: '',
     passwordConfirmation: '',
-    errors: []
+    username: ''
   }
 
   changeHandler = (evt) => {
@@ -28,17 +29,29 @@ class Register extends Component {
   }
 
   submitHandler = (evt) => {
-    if (this.isFormValid()) {
+    evt.preventDefault();
 
-      evt.preventDefault();
+    if (this.isFormValid()) {
+      console.log(`FORM IS VALID`)
+      this.setState({
+        errors: [], loading: true
+      });
+
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.state.email, this.state.password)
         .then(createdUser => {
           console.warn(createdUser);
+          this.setState({
+            loading: false
+          });
         })
         .catch(err => {
           console.error(`Error : ${err}`)
+          this.setState({
+            errors: this.state.errors.concat(err),
+            loading: false
+          });
         })
     }
   }
@@ -60,9 +73,6 @@ class Register extends Component {
       })
       return false;
     } else {
-      this.setState({
-        errors: []
-      })
       return true;
     }
   }
@@ -84,10 +94,23 @@ class Register extends Component {
 
   displayErrors = errors => errors.map((error, idx) => <p key={(idx * Math.random())}>{error.message}</p>)
 
+  inputErrorHandler = (errors, inputName) => {
+    return errors.some(error =>
+      error.message.toLowerCase().includes(inputName)
+    ) ? 'error' : ''
+  }
+
 
   render () {
 
-    const {username, email, password, passwordConfirmation, errors} = this.state
+    const {
+      email,
+      errors,
+      loading,
+      password,
+      passwordConfirmation,
+      username
+    } = this.state
 
     return (
       <Grid textAlign='center' verticalAlign='middle' className='app'>
@@ -99,46 +122,55 @@ class Register extends Component {
           <Form onSubmit={this.submitHandler} size='large'>
             <Segment stacked>
               <Form.Input
+                className={this.inputErrorHandler(errors,'username')}
                 fluid
-                name='username'
                 icon='user'
                 iconPosition='left'
+                name='username'
+                onChange={this.changeHandler}
                 placeholder='Username'
                 type='text'
-                value={username}
-                onChange={this.changeHandler} />
+                value={username} />
 
               <Form.Input
+                className={this.inputErrorHandler(errors,'email')}
                 fluid
-                name='email'
                 icon='mail'
                 iconPosition='left'
+                name='email'
+                onChange={this.changeHandler}
                 placeholder='Email'
                 type='email'
-                value={email}
-                onChange={this.changeHandler} />
+                value={email} />
 
               <Form.Input
+                className={this.inputErrorHandler(errors,'password')}
                 fluid
-                name='password'
                 icon='lock'
                 iconPosition='left'
+                name='password'
+                onChange={this.changeHandler}
                 placeholder='Password'
                 type='password'
-                value={password}
-                onChange={this.changeHandler} />
+                value={password} />
 
               <Form.Input
+                className={this.inputErrorHandler(errors,'password')}
                 fluid
-                name='passwordConfirmation'
                 icon='repeat'
                 iconPosition='left'
+                name='passwordConfirmation'
+                onChange={this.changeHandler}
                 placeholder='Password Confirmation'
                 type='password'
-                value={passwordConfirmation}
-                onChange={this.changeHandler} />
+                value={passwordConfirmation} />
 
-              <Button color='orange' fluid size='large'>Submit</Button>
+              <Button
+                className={loading ? 'loading' : ''}
+                color='orange'
+                disabled={loading}
+                fluid
+                size='large'>Submit</Button>
 
             </Segment>
           </Form>
